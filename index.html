@@ -6,7 +6,165 @@
     <title>Баллы учеников</title>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
     <style>
-        /* Ваши стили */
+        /* Общие стили */
+        body {
+            font-family: 'Russo One', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            scroll-behavior: smooth;
+        }
+
+        /* Обложка на весь экран */
+        .cover {
+            background-image: url('https://img3.akspic.ru/crops/5/4/7/2/5/152745/152745-dizajn-graficeskij_dizajn-sinij-krasochnost-purpur-3840x2160.jpg');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .cover h1 {
+            font-size: 48px;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        /* Кнопка "Узнай свой балл" */
+        .cover button {
+            padding: 15px 30px;
+            font-size: 18px;
+            color: #ffffff;
+            background-color: #9400d3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .cover button:hover {
+            background-color: #7a00b3;
+            transform: scale(1.05);
+        }
+
+        /* Основной контент */
+        .content {
+            background-color: #1a1a1a;
+            padding: 20px;
+        }
+
+        /* Фильтры */
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px;
+            padding: 10px;
+            background-color: #333333;
+            border-radius: 10px;
+            gap: 10px;
+        }
+
+        .filters select, .filters button {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #9400d3;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filters button:hover {
+            background-color: #7a00b3;
+        }
+
+        /* Контейнер для учеников */
+        #students {
+            margin: 20px;
+        }
+
+        /* Шкала баллов */
+        .bar-container {
+            width: 100%;
+            background-color: #333333;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            position: relative;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .bar {
+            height: 30px;
+            background: linear-gradient(90deg, #00ff00 0%, #00cc88 100%);
+            border-radius: 6px;
+            text-align: center;
+            color: #1a1a1a;
+            font-weight: bold;
+            line-height: 30px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(0,255,0,0.3);
+            position: relative;
+        }
+
+        .emoji {
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            z-index: 2;
+        }
+
+        .student-name {
+            position: absolute;
+            left: 15px;
+            z-index: 2;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            padding: 0 10px;
+        }
+
+        /* Шкала баллов (подпись) */
+        .points-scale {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            color: #ffffff;
+            font-size: 14px;
+            padding: 0 10px;
+        }
+
+        /* Фильтры по времени */
+        .time-filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px;
+        }
+
+        .time-filters button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #9400d3;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .time-filters button:hover {
+            background-color: #7a00b3;
+        }
     </style>
 </head>
 <body>
