@@ -18,7 +18,7 @@
 
         /* Обложка на весь экран */
         .cover {
-            background-image: url('https://img3.akspic.ru/crops/5/4/7/2/5/152745/152745-dizajn-graficeskij_dizajn-sinij-krasochnost-purpur-3840x2160.jpg');
+            background-image: url('https://img.freepik.com/free-vector/gradient-liquid-wavy-background_23-2149111795.jpg');
             background-size: cover;
             background-position: center;
             height: 100vh;
@@ -107,22 +107,14 @@
             height: 30px;
             background: linear-gradient(90deg, #00ff00 0%, #00cc88 100%);
             border-radius: 6px;
-            text-align: center;
+            text-align: right; /* Текст справа */
             color: #1a1a1a;
             font-weight: bold;
             line-height: 30px;
             transition: width 0.5s ease;
             box-shadow: 0 0 10px rgba(0,255,0,0.3);
             position: relative;
-        }
-
-        .emoji {
-            position: absolute;
-            right: -25px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 24px;
-            z-index: 2;
+            padding-right: 10px; /* Отступ для текста */
         }
 
         .student-name {
@@ -131,6 +123,7 @@
             z-index: 2;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
             padding: 0 10px;
+            line-height: 30px; /* Выравниваем по высоте шкалы */
         }
 
         /* Шкала баллов (подпись) */
@@ -202,7 +195,7 @@
 
     <script>
         // Конфигурация
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxH130xCh-Ik__wP7d5nkf5Pm9uKVOU4d3VazS0HDCX8XTv_KdcC4OvsgdikGjlhbrg/exec'; // Ссылка на API
+        const API_URL = 'ВАШ_ССЫЛКА_НА_API'; // Ссылка на API
         const BACKGROUND_IMAGE = 'https://img.freepik.com/free-vector/gradient-liquid-wavy-background_23-2149111795.jpg'; // Ссылка на фоновую картинку
 
         // Применяем фоновую картинку
@@ -232,13 +225,21 @@
         // Функция для сортировки по баллам
         function sortByPoints() {
             const selectedGroup = document.getElementById('groupFilter').value;
-            filterByPeriod('all'); // Пересчитываем данные за все время
+            const period = document.querySelector('.time-filters button.active')?.dataset.period || 'all';
+            filterByPeriod(period); // Пересчитываем данные для текущего периода
         }
 
         // Назначаем обработчик для кнопки сортировки
         document.getElementById('sortButton').addEventListener('click', sortByPoints);
 
-        // Остальные функции (fetchData, populateGroupFilter, getEmoji, aggregateData, displayData)
+        // Обработчик изменения фильтра по группам
+        document.getElementById('groupFilter').addEventListener('change', (event) => {
+            const selectedGroup = event.target.value;
+            const period = document.querySelector('.time-filters button.active')?.dataset.period || 'all';
+            filterByPeriod(period); // Пересчитываем данные для текущего периода
+        });
+
+        // Функция для получения данных из API
         async function fetchData() {
             const response = await fetch(API_URL);
             const data = await response.json();
@@ -247,6 +248,7 @@
             filterByPeriod('all'); // По умолчанию показываем данные за все время
         }
 
+        // Заполняем фильтр группами
         function populateGroupFilter(data) {
             const groupFilter = document.getElementById('groupFilter');
             const groups = [...new Set(data.map(student => student.group))];
@@ -258,15 +260,7 @@
             });
         }
 
-        function getEmoji(points) {
-            if (points >= 0 && points < 200) return '👍'; // Лайк
-            if (points >= 200 && points < 400) return '😊'; // Улыбка
-            if (points >= 400 && points < 600) return '⭐'; // Звездочка
-            if (points >= 600 && points < 800) return '🚀'; // Ракета
-            if (points >= 800 && points <= 1000) return '🔥'; // Огонь
-            return '';
-        }
-
+        // Агрегируем данные по ученикам за выбранный период
         function aggregateData(data, period) {
             const aggregatedData = {};
 
@@ -297,6 +291,7 @@
             }
         }
 
+        // Отображаем данные
         function displayData(data, group) {
             const container = document.getElementById('students');
             container.innerHTML = '';
@@ -319,12 +314,6 @@
                 bar.className = 'bar';
                 bar.style.width = `${Math.min((student.points / 1000) * 100, 100)}%`;
                 bar.textContent = `${student.points} БАЛЛОВ`;
-
-                // Добавляем эмодзи
-                const emoji = document.createElement('span');
-                emoji.className = 'emoji';
-                emoji.textContent = getEmoji(student.points);
-                bar.appendChild(emoji);
 
                 const nameSpan = document.createElement('span');
                 nameSpan.className = 'student-name';
