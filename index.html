@@ -170,9 +170,11 @@
     <!-- Основной контент -->
     <div class="content">
         <!-- Фильтры по времени -->
-        <div class="time-filters">
-            <button id="filterAllTime">Все время</button>
-            <button id="filterByMonth">По месяцам</button>
+       <div class="time-filters">
+            <button onclick="setFilter('day')">День</button>
+            <button onclick="setFilter('week')">Неделя</button>
+            <button onclick="setFilter('month')">Месяц</button>
+            <button onclick="setFilter('all')">Все время</button>
         </div>
 
         <!-- Фильтры -->
