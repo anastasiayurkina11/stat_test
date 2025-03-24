@@ -182,166 +182,169 @@
         <div id="students"></div>
     </div>
 
-    <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzTmGon_OCDesreEvTjKcJvv7EBkmB6G7phj2X8dYRtY6PPJ5Qjg537FaZpepxh57BL/exec';
-        const BACKGROUND_IMAGE = 'https://img3.akspic.ru/crops/5/4/7/2/5/152745/152745-dizajn-graficeskij_dizajn-sinij-krasochnost-purpur-3840x2160.jpg';
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxD19GNHIzZZJs0epccK6wSXdUKbx8i14zFtGTDNIz9TGPOkd_utYJsiNSD6WhxbOop/exec';
+    const BACKGROUND_IMAGE = 'https://img.freepik.com/free-vector/gradient-liquid-wavy-background_23-2149111795.jpg';
 
-        // Инициализация
-        document.querySelector('.cover').style.backgroundImage = `url(${BACKGROUND_IMAGE})`;
-        let studentsData = [];
-        let currentPeriod = 'all';
-        let currentGroup = 'all';
+    // Инициализация
+    document.querySelector('.cover').style.backgroundImage = `url(${BACKGROUND_IMAGE})`;
+    let studentsData = [];
+    let currentPeriod = 'all';
+    let currentGroup = 'all';
 
-        // Новая функция для преобразования даты из формата YYYY.MM.DD в Date
-        function parseCustomDate(dateStr) {
-            const parts = dateStr.split('.');
-            return new Date(parts[0], parts[1] - 1, parts[2]);
+    // Функция для преобразования даты из формата таблицы
+    function parseSheetDate(dateStr) {
+        const parts = dateStr.split('.');
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+
+    // Получение диапазона дат для периода
+    function getPeriodRange(period) {
+        const today = new Date();
+        const range = { start: new Date(0), end: new Date(8640000000000000) };
+        
+        if (period === 'day') {
+            range.start = new Date(today);
+            range.start.setHours(0, 0, 0, 0);
+            range.end = new Date(today);
+            range.end.setHours(23, 59, 59, 999);
+        } 
+        else if (period === 'week') {
+            range.start = new Date(today);
+            range.start.setDate(today.getDate() - today.getDay());
+            range.start.setHours(0, 0, 0, 0);
+            range.end = new Date(range.start);
+            range.end.setDate(range.start.getDate() + 6);
+            range.end.setHours(23, 59, 59, 999);
         }
-
-        // Улучшенная функция проверки периода
-        function isInPeriod(date, period, today = new Date()) {
-            switch(period) {
-                case 'day':
-                    return date.toDateString() === today.toDateString();
-                case 'week':
-                    const startWeek = new Date(today);
-                    startWeek.setDate(today.getDate() - today.getDay());
-                    return date >= startWeek && date <= today;
-                case 'month':
-                    return date.getMonth() === today.getMonth() && 
-                           date.getFullYear() === today.getFullYear();
-                default:
-                    return true;
-            }
+        else if (period === 'month') {
+            range.start = new Date(today.getFullYear(), today.getMonth(), 1);
+            range.end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            range.end.setHours(23, 59, 59, 999);
         }
+        
+        return range;
+    }
 
-        // Функция для расчета баллов за период
-        function calculatePeriodPoints(student, period) {
-            if (period === 'all') {
-                return student.total;
-            }
-            
-            let sum = 0;
-            for (const [dateStr, points] of Object.entries(student.dates)) {
-                const date = new Date(dateStr);
-                if (isInPeriod(date, period)) {
-                    sum += points;
-                }
-            }
-            return sum;
+    // Расчет баллов за период
+    function calculatePeriodPoints(student, period) {
+        if (period === 'all') {
+            return student.total;
         }
+        
+        const range = getPeriodRange(period);
+        return Object.entries(student.dates).reduce((sum, [dateStr, points]) => {
+            const date = new Date(dateStr);
+            return (date >= range.start && date <= range.end) ? sum + points : sum;
+        }, 0);
+    }
 
-        // Обновленная функция отображения данных
-        function displayData() {
-            const container = document.getElementById('students');
-            container.innerHTML = '';
-            const today = new Date();
+    // Отображение данных
+    function displayData() {
+        const container = document.getElementById('students');
+        container.innerHTML = '';
+        
+        const filteredStudents = studentsData
+            .filter(student => currentGroup === 'all' || student.group === currentGroup)
+            .map(student => ({
+                ...student,
+                displayPoints: calculatePeriodPoints(student, currentPeriod)
+            }))
+            .sort((a, b) => b.displayPoints - a.displayPoints);
 
-            const filteredData = studentsData
-                .filter(student => currentGroup === 'all' || student.group === currentGroup)
-                .map(student => {
-                    const periodPoints = calculatePeriodPoints(student, currentPeriod);
-                    return {
-                        ...student,
-                        displayPoints: periodPoints,
-                        width: Math.min((periodPoints / 1000) * 100, 100)
-                    };
-                })
-                .sort((a, b) => b.displayPoints - a.displayPoints);
+        filteredStudents.forEach(student => {
+            const barContainer = document.createElement('div');
+            barContainer.className = 'bar-container';
 
-            filteredData.forEach(student => {
-                const barContainer = document.createElement('div');
-                barContainer.className = 'bar-container';
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            const width = Math.min((student.displayPoints / 1000) * 100, 100);
+            bar.style.width = `${width}%`;
+            bar.textContent = `${student.displayPoints} БАЛЛОВ`;
 
-                const bar = document.createElement('div');
-                bar.className = 'bar';
-                bar.style.width = `${student.width}%`;
-                bar.textContent = `${student.displayPoints} БАЛЛОВ`;
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'student-name';
+            nameSpan.textContent = student.name.toUpperCase();
 
-                const nameSpan = document.createElement('span');
-                nameSpan.className = 'student-name';
-                nameSpan.textContent = student.name.toUpperCase();
-
-                barContainer.appendChild(nameSpan);
-                barContainer.appendChild(bar);
-                container.appendChild(barContainer);
-            });
-        }
-
-        // Обработчики событий
-        document.getElementById('scrollButton').addEventListener('click', () => {
-            document.querySelector('.content').scrollIntoView({ behavior: 'smooth' });
+            barContainer.appendChild(nameSpan);
+            barContainer.appendChild(bar);
+            container.appendChild(barContainer);
         });
+    }
 
-        document.querySelectorAll('.time-filters button').forEach(button => {
-            button.addEventListener('click', (e) => {
-                currentPeriod = e.target.dataset.period;
-                document.querySelectorAll('.time-filters button').forEach(btn => 
-                    btn.classList.remove('active'));
-                e.target.classList.add('active');
-                displayData();
-            });
-        });
+    // Обработчики событий
+    document.getElementById('scrollButton').addEventListener('click', () => {
+        document.querySelector('.content').scrollIntoView({ behavior: 'smooth' });
+    });
 
-        document.getElementById('groupFilter').addEventListener('change', (e) => {
-            currentGroup = e.target.value;
+    document.querySelectorAll('.time-filters button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            currentPeriod = e.target.dataset.period;
+            document.querySelectorAll('.time-filters button').forEach(btn => 
+                btn.classList.remove('active'));
+            e.target.classList.add('active');
             displayData();
         });
+    });
 
-        document.getElementById('sortButton').addEventListener('click', displayData);
+    document.getElementById('groupFilter').addEventListener('change', (e) => {
+        currentGroup = e.target.value;
+        displayData();
+    });
 
-        // Загрузка данных
-        async function fetchData() {
-            try {
-                const response = await fetch(API_URL);
-                const rawData = await response.json();
-                
-                // Преобразуем данные в нужный формат
-                studentsData = rawData.map(student => {
-                    // Преобразуем даты из формата "YYYY-MM-DD" в Date
-                    const dates = {};
-                    for (const [dateStr, points] of Object.entries(student.dates)) {
-                        dates[dateStr] = Number(points) || 0;
-                    }
-                    
-                    return {
-                        name: student.name,
-                        group: student.group,
-                        total: Number(student.total) || 0,
-                        dates: dates
-                    };
-                });
-                
-                populateGroupFilter();
-                displayData();
-            } catch (error) {
-                console.error('Ошибка загрузки данных:', error);
-                alert('Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже.');
-            }
-        }
+    document.getElementById('sortButton').addEventListener('click', displayData);
 
-        function populateGroupFilter() {
-            const groupFilter = document.getElementById('groupFilter');
-            const groups = [...new Set(studentsData.map(student => student.group))];
+    // Загрузка данных
+    async function fetchData() {
+        try {
+            const response = await fetch(API_URL);
+            const rawData = await response.json();
             
-            // Очищаем существующие опции, кроме первой
-            while (groupFilter.options.length > 1) {
-                groupFilter.remove(1);
-            }
-            
-            // Добавляем новые опции
-            groups.forEach(group => {
-                if (group) { // Проверяем, что группа не пустая
-                    const option = document.createElement('option');
-                    option.value = group;
-                    option.textContent = group;
-                    groupFilter.appendChild(option);
+            studentsData = rawData.map(student => {
+                // Преобразуем даты в правильный формат
+                const dates = {};
+                for (const [dateStr, points] of Object.entries(student.dates)) {
+                    dates[dateStr] = Number(points) || 0;
                 }
+                
+                return {
+                    name: student.name,
+                    group: student.group,
+                    total: Number(student.total) || 0,
+                    dates: dates
+                };
             });
+            
+            populateGroupFilter();
+            displayData();
+        } catch (error) {
+            console.error('Ошибка загрузки данных:', error);
+            alert('Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже.');
         }
+    }
 
-        // Запускаем приложение
-        fetchData();
-    </script>
+    function populateGroupFilter() {
+        const groupFilter = document.getElementById('groupFilter');
+        const groups = [...new Set(studentsData.map(student => student.group))];
+        
+        // Очищаем существующие опции, кроме первой
+        while (groupFilter.options.length > 1) {
+            groupFilter.remove(1);
+        }
+        
+        // Добавляем новые опции
+        groups.forEach(group => {
+            if (group) {
+                const option = document.createElement('option');
+                option.value = group;
+                option.textContent = group;
+                groupFilter.appendChild(option);
+            }
+        });
+    }
+
+    // Запуск приложения
+    fetchData();
+</script>
 </body>
 </html>
