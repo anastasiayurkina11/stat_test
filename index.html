@@ -195,9 +195,9 @@
     // Функция для преобразования даты из формата таблицы
     function parseSheetDate(dateStr) {
         const parts = dateStr.split('.');
-        return new Date(parts[0], parts[1] - 1, parts[2]);
+        return new Date(parts[2], parts[1] - 1, parts[0]); // Измененный порядок: день, месяц, год
     }
-
+    
     // Получение диапазона дат для периода
     function getPeriodRange(period) {
         const today = new Date();
@@ -210,8 +210,9 @@
             range.end.setHours(23, 59, 59, 999);
         } 
         else if (period === 'week') {
-            range.start = new Date(today);
-            range.start.setDate(today.getDate() - today.getDay());
+            const dayOfWeek = today.getDay();
+            const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Учитываем воскресенье как последний день недели
+            range.start = new Date(today.setDate(diff));
             range.start.setHours(0, 0, 0, 0);
             range.end = new Date(range.start);
             range.end.setDate(range.start.getDate() + 6);
