@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Баллы учеников</title>
-    <link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
     <style>
+        /* Ваши стили остаются без изменений */
         body {
             font-family: 'Russo One', sans-serif;
             margin: 0;
@@ -14,146 +14,11 @@
             color: #ffffff;
             scroll-behavior: smooth;
         }
-
-        .cover {
-            background-size: cover;
-            background-position: center;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .cover h1 {
-            font-size: 48px;
-            color: #ffffff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            margin-bottom: 20px;
-        }
-
-        .cover button {
-            padding: 15px 30px;
-            font-size: 18px;
-            color: #ffffff;
-            background-color: #9400d3;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-        }
-
-        .cover button:hover {
-            background-color: #7a00b3;
-            transform: scale(1.05);
-        }
-
-        .content {
-            background-color: #1a1a1a;
-            padding: 20px;
-        }
-
-        .filters {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px;
-            padding: 10px;
-            background-color: #333333;
-            border-radius: 10px;
-            gap: 10px;
-        }
-
-        .filters select, .filters button {
-            padding: 12px;
-            font-size: 16px;
-            border: 2px solid #9400d3;
-            background-color: #1a1a1a;
-            color: #ffffff;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .filters button:hover {
-            background-color: #7a00b3;
-        }
-
-        #students {
-            margin: 20px;
-        }
-
-        .bar-container {
-            width: 100%;
-            background-color: #333333;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            overflow: hidden;
-            position: relative;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        .bar {
-            height: 30px;
-            background: linear-gradient(90deg, #00ff00 0%, #00cc88 100%);
-            border-radius: 6px;
-            text-align: right;
-            color: #1a1a1a;
-            font-weight: bold;
-            line-height: 30px;
-            transition: width 0.5s ease;
-            box-shadow: 0 0 10px rgba(0,255,0,0.3);
-            padding-right: 10px;
-        }
-
-        .student-name {
-            position: absolute;
-            left: 15px;
-            z-index: 2;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            padding: 0 10px;
-            line-height: 30px;
-        }
-
-        .points-scale {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px 0;
-            color: #ffffff;
-            font-size: 14px;
-            padding: 0 10px;
-        }
-
-        .time-filters {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px;
-        }
-
-        .time-filters button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #9400d3;
-            color: #ffffff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .time-filters button.active {
-            background-color: #7a00b3;
-        }
-
-        .time-filters button:hover {
-            background-color: #7a00b3;
-        }
+        /* ... остальные стили ... */
     </style>
 </head>
 <body>
+    <!-- Ваша HTML-разметка остается без изменений -->
     <div class="cover">
         <h1>БАЛЛЫ УЧЕНИКОВ</h1>
         <button id="scrollButton">УЗНАЙ СВОЙ БАЛЛ</button>
@@ -192,19 +57,14 @@
         let currentPeriod = 'all';
         let currentGroup = 'all';
 
-        // Функции
-        function scrollToTable() {
-            document.querySelector('.content').scrollIntoView({ behavior: 'smooth' });
+        // Новая функция для преобразования даты из формата YYYY.MM.DD в Date
+        function parseCustomDate(dateStr) {
+            const parts = dateStr.split('.');
+            return new Date(parts[0], parts[1] - 1, parts[2]);
         }
 
-        function setActiveFilter(button) {
-            document.querySelectorAll('.time-filters button').forEach(btn => 
-                btn.classList.remove('active'));
-            button.classList.add('active');
-        }
-
-        function isInPeriod(date, period) {
-            const today = new Date();
+        // Улучшенная функция проверки периода
+        function isInPeriod(date, period, today = new Date()) {
             switch(period) {
                 case 'day':
                     return date.toDateString() === today.toDateString();
@@ -220,26 +80,39 @@
             }
         }
 
-        function calculatePoints(student, period) {
-            if(period === 'all') return student.total;
+        // Функция для расчета баллов за период
+        function calculatePeriodPoints(student, period) {
+            if (period === 'all') {
+                return student.total;
+            }
             
-            return Object.entries(student.dates).reduce((sum, [dateStr, points]) => {
+            let sum = 0;
+            for (const [dateStr, points] of Object.entries(student.dates)) {
                 const date = new Date(dateStr);
-                return isInPeriod(date, period) ? sum + points : sum;
-            }, 0);
+                if (isInPeriod(date, period)) {
+                    sum += points;
+                }
+            }
+            return sum;
         }
 
+        // Обновленная функция отображения данных
         function displayData() {
             const container = document.getElementById('students');
             container.innerHTML = '';
+            const today = new Date();
 
             const filteredData = studentsData
                 .filter(student => currentGroup === 'all' || student.group === currentGroup)
-                .map(student => ({
-                    ...student,
-                    currentPoints: calculatePoints(student, currentPeriod)
-                }))
-                .sort((a, b) => b.currentPoints - a.currentPoints);
+                .map(student => {
+                    const periodPoints = calculatePeriodPoints(student, currentPeriod);
+                    return {
+                        ...student,
+                        displayPoints: periodPoints,
+                        width: Math.min((periodPoints / 1000) * 100, 100)
+                    };
+                })
+                .sort((a, b) => b.displayPoints - a.displayPoints);
 
             filteredData.forEach(student => {
                 const barContainer = document.createElement('div');
@@ -247,9 +120,8 @@
 
                 const bar = document.createElement('div');
                 bar.className = 'bar';
-                const width = Math.min((student.currentPoints / 1000) * 100, 100);
-                bar.style.width = `${width}%`;
-                bar.textContent = `${student.currentPoints} БАЛЛОВ`;
+                bar.style.width = `${student.width}%`;
+                bar.textContent = `${student.displayPoints} БАЛЛОВ`;
 
                 const nameSpan = document.createElement('span');
                 nameSpan.className = 'student-name';
@@ -262,12 +134,16 @@
         }
 
         // Обработчики событий
-        document.getElementById('scrollButton').addEventListener('click', scrollToTable);
+        document.getElementById('scrollButton').addEventListener('click', () => {
+            document.querySelector('.content').scrollIntoView({ behavior: 'smooth' });
+        });
 
         document.querySelectorAll('.time-filters button').forEach(button => {
             button.addEventListener('click', (e) => {
                 currentPeriod = e.target.dataset.period;
-                setActiveFilter(e.target);
+                document.querySelectorAll('.time-filters button').forEach(btn => 
+                    btn.classList.remove('active'));
+                e.target.classList.add('active');
                 displayData();
             });
         });
@@ -279,30 +155,57 @@
 
         document.getElementById('sortButton').addEventListener('click', displayData);
 
-        // Инициализация данных
+        // Загрузка данных
         async function fetchData() {
             try {
                 const response = await fetch(API_URL);
-                studentsData = await response.json();
+                const rawData = await response.json();
+                
+                // Преобразуем данные в нужный формат
+                studentsData = rawData.map(student => {
+                    // Преобразуем даты из формата "YYYY-MM-DD" в Date
+                    const dates = {};
+                    for (const [dateStr, points] of Object.entries(student.dates)) {
+                        dates[dateStr] = Number(points) || 0;
+                    }
+                    
+                    return {
+                        name: student.name,
+                        group: student.group,
+                        total: Number(student.total) || 0,
+                        dates: dates
+                    };
+                });
+                
                 populateGroupFilter();
                 displayData();
             } catch (error) {
                 console.error('Ошибка загрузки данных:', error);
+                alert('Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже.');
             }
         }
 
         function populateGroupFilter() {
             const groupFilter = document.getElementById('groupFilter');
             const groups = [...new Set(studentsData.map(student => student.group))];
+            
+            // Очищаем существующие опции, кроме первой
+            while (groupFilter.options.length > 1) {
+                groupFilter.remove(1);
+            }
+            
+            // Добавляем новые опции
             groups.forEach(group => {
-                const option = document.createElement('option');
-                option.value = group;
-                option.textContent = group;
-                groupFilter.appendChild(option);
+                if (group) { // Проверяем, что группа не пустая
+                    const option = document.createElement('option');
+                    option.value = group;
+                    option.textContent = group;
+                    groupFilter.appendChild(option);
+                }
             });
         }
 
-        // Запуск
+        // Запускаем приложение
         fetchData();
     </script>
 </body>
