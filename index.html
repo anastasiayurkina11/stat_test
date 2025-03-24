@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Баллы учеников</title>
-    <style>
-        /* Ваши стили остаются без изменений */
+ <style>
         body {
             font-family: 'Russo One', sans-serif;
             margin: 0;
@@ -14,7 +13,143 @@
             color: #ffffff;
             scroll-behavior: smooth;
         }
-        /* ... остальные стили ... */
+
+        .cover {
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .cover h1 {
+            font-size: 48px;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        .cover button {
+            padding: 15px 30px;
+            font-size: 18px;
+            color: #ffffff;
+            background-color: #9400d3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .cover button:hover {
+            background-color: #7a00b3;
+            transform: scale(1.05);
+        }
+
+        .content {
+            background-color: #1a1a1a;
+            padding: 20px;
+        }
+
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px;
+            padding: 10px;
+            background-color: #333333;
+            border-radius: 10px;
+            gap: 10px;
+        }
+
+        .filters select, .filters button {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #9400d3;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filters button:hover {
+            background-color: #7a00b3;
+        }
+
+        #students {
+            margin: 20px;
+        }
+
+        .bar-container {
+            width: 100%;
+            background-color: #333333;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            position: relative;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .bar {
+            height: 30px;
+            background: linear-gradient(90deg, #00ff00 0%, #00cc88 100%);
+            border-radius: 6px;
+            text-align: right;
+            color: #1a1a1a;
+            font-weight: bold;
+            line-height: 30px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(0,255,0,0.3);
+            padding-right: 10px;
+        }
+
+        .student-name {
+            position: absolute;
+            left: 15px;
+            z-index: 2;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            padding: 0 10px;
+            line-height: 30px;
+        }
+
+        .points-scale {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            color: #ffffff;
+            font-size: 14px;
+            padding: 0 10px;
+        }
+
+        .time-filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px;
+        }
+
+        .time-filters button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #9400d3;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .time-filters button.active {
+            background-color: #7a00b3;
+        }
+
+        .time-filters button:hover {
+            background-color: #7a00b3;
+        }
     </style>
 </head>
 <body>
