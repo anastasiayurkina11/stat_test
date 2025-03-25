@@ -183,21 +183,24 @@
     </div>
 
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbw8VOVueoEjF2bLiggfqqrKz4oAXkxzD5Ac88HtNUpskyjZaLtKFmT4eDJ2BwFi9HNk/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbx3TEyTpuNZiUYwlGGd4sHZAYAzXFsEuJSrTxIOM0O6fumPiX07CdJMPgOqaLb44V_obg/exec';
     const BACKGROUND_IMAGE = 'https://img3.akspic.ru/crops/5/4/7/2/5/152745/152745-dizajn-graficeskij_dizajn-sinij-krasochnost-purpur-3840x2160.jpg';
 
-    // Инициализация
     document.querySelector('.cover').style.backgroundImage = `url(${BACKGROUND_IMAGE})`;
     let studentsData = [];
     let currentPeriod = 'all';
     let currentGroup = 'all';
 
-    // Функция для преобразования даты из формата таблицы
-    function parseSheetDate(dateStr) {
-        const parts = dateStr.split('.');
-        return new Date(parts[2], parts[1] - 1, parts[0]); // Измененный порядок: день, месяц, год
+    // Функция для определения ISO недели
+    function getISOWeek(date) {
+        const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+        const week1 = new Date(d.getFullYear(), 0, 4);
+        const weekNum = 1 + Math.round((d - week1) / 86400000 / 7);
+        return `${d.getFullYear()}W${weekNum.toString().padStart(2, '0')}`;
     }
-    
+
     // Получение диапазона дат для периода
     function getPeriodRange(period) {
         const today = new Date();
@@ -211,7 +214,7 @@
         } 
         else if (period === 'week') {
             const dayOfWeek = today.getDay();
-            const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Учитываем воскресенье как последний день недели
+            const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
             range.start = new Date(today.setDate(diff));
             range.start.setHours(0, 0, 0, 0);
             range.end = new Date(range.start);
@@ -229,9 +232,10 @@
 
     // Расчет баллов за период
     function calculatePeriodPoints(student, period) {
-        if (period === 'all') {
-            return student.total;
-        }
+        if (period === 'all') return student.total;
+        if (period === 'day') return student.day;
+        if (period === 'week') return student.week;
+        if (period === 'month') return student.month;
         
         const range = getPeriodRange(period);
         return Object.entries(student.dates).reduce((sum, [dateStr, points]) => {
@@ -253,13 +257,15 @@
             }))
             .sort((a, b) => b.displayPoints - a.displayPoints);
 
+        const maxPoints = Math.max(...filteredStudents.map(s => s.displayPoints), 1000);
+
         filteredStudents.forEach(student => {
             const barContainer = document.createElement('div');
             barContainer.className = 'bar-container';
 
             const bar = document.createElement('div');
             bar.className = 'bar';
-            const width = Math.min((student.displayPoints / 1000) * 100, 100);
+            const width = Math.min((student.displayPoints / maxPoints) * 100, 100);
             bar.style.width = `${width}%`;
             bar.textContent = `${student.displayPoints} БАЛЛОВ`;
 
@@ -273,7 +279,62 @@
         });
     }
 
-    // Обработчики событий
+    // Загрузка данных
+    async function fetchData() {
+        try {
+            const response = await fetch(API_URL);
+            const rawData = await response.json();
+            
+            studentsData = rawData.map(student => {
+                // Рассчитываем баллы по периодам
+                const today = new Date();
+                let dayTotal = 0;
+                let weekTotal = 0;
+                let monthTotal = 0;
+                const dates = {};
+
+                Object.entries(student.dates).forEach(([dateStr, points]) => {
+                    const date = new Date(dateStr);
+                    dates[dateStr] = Number(points) || 0;
+                    
+                    // Проверяем периоды
+                    if (date.toDateString() === today.toDateString()) dayTotal += dates[dateStr];
+                    if (getISOWeek(date) === getISOWeek(today)) weekTotal += dates[dateStr];
+                    if (date.getFullYear() === today.getFullYear() && 
+                        date.getMonth() === today.getMonth()) monthTotal += dates[dateStr];
+                });
+                
+                return {
+                    ...student,
+                    total: Number(student.total) || 0,
+                    day: dayTotal,
+                    week: weekTotal,
+                    month: monthTotal,
+                    dates: dates
+                };
+            });
+            
+            populateGroupFilter();
+            displayData();
+        } catch (error) {
+            console.error('Ошибка загрузки данных:', error);
+            alert('Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже.');
+        }
+    }
+
+    function populateGroupFilter() {
+        const groupFilter = document.getElementById('groupFilter');
+        const groups = [...new Set(studentsData.map(student => student.group).filter(Boolean))];
+        
+        groups.forEach(group => {
+            const option = document.createElement('option');
+            option.value = group;
+            option.textContent = group;
+            groupFilter.appendChild(option);
+        });
+    }
+
+    // Инициализация
     document.getElementById('scrollButton').addEventListener('click', () => {
         document.querySelector('.content').scrollIntoView({ behavior: 'smooth' });
     });
@@ -294,55 +355,6 @@
     });
 
     document.getElementById('sortButton').addEventListener('click', displayData);
-
-    // Загрузка данных
-    async function fetchData() {
-        try {
-            const response = await fetch(API_URL);
-            const rawData = await response.json();
-            
-            studentsData = rawData.map(student => {
-                // Преобразуем даты в правильный формат
-                const dates = {};
-                for (const [dateStr, points] of Object.entries(student.dates)) {
-                    dates[dateStr] = Number(points) || 0;
-                }
-                
-                return {
-                    name: student.name,
-                    group: student.group,
-                    total: Number(student.total) || 0,
-                    dates: dates
-                };
-            });
-            
-            populateGroupFilter();
-            displayData();
-        } catch (error) {
-            console.error('Ошибка загрузки данных:', error);
-            alert('Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже.');
-        }
-    }
-
-    function populateGroupFilter() {
-        const groupFilter = document.getElementById('groupFilter');
-        const groups = [...new Set(studentsData.map(student => student.group))];
-        
-        // Очищаем существующие опции, кроме первой
-        while (groupFilter.options.length > 1) {
-            groupFilter.remove(1);
-        }
-        
-        // Добавляем новые опции
-        groups.forEach(group => {
-            if (group) {
-                const option = document.createElement('option');
-                option.value = group;
-                option.textContent = group;
-                groupFilter.appendChild(option);
-            }
-        });
-    }
 
     // Запуск приложения
     fetchData();
