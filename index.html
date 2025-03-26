@@ -87,15 +87,41 @@
             width: 100%;
             background-color: #333333;
             border-radius: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 15px; /* Увеличим отступ между строками */
             overflow: hidden;
             position: relative;
-            padding: 10px;
+            padding: 5px;
             box-sizing: border-box;
         }
 
-        .bar {
+        .student-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .student-name {
+            font-size: 14px;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .student-points {
+            font-size: 14px;
+            color: #ffffff;
+        }
+
+        .bar-wrapper {
+            position: relative;
+            width: 100%;
             height: 30px;
+            background-color: #333333;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
             background: linear-gradient(90deg, #00ff00 0%, #00cc88 100%);
             border-radius: 6px;
             text-align: right;
@@ -105,77 +131,18 @@
             transition: width 0.5s ease;
             box-shadow: 0 0 10px rgba(0,255,0,0.3);
             padding-right: 10px;
-            position: relative;
-        }
-
-        .student-name {
-            position: absolute;
-            left: 15px;
-            top: 15px;
-            z-index: 2;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            font-size: 14px;
-        }
-
-        .points-scale {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px 0;
-            color: #ffffff;
-            font-size: 14px;
-            padding: 0 10px;
-        }
-
-        .scale-marker {
-            position: relative;
-            text-align: center;
-            width: 0;
-        }
-
-        .scale-marker::after {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: 0;
-            width: 2px;
-            height: 10px;
-            background-color: #ffffff;
-        }
-
-        .time-filters {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px;
-        }
-
-        .time-filters button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #9400d3;
-            color: #ffffff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .time-filters button.active {
-            background-color: #7a00b3;
-        }
-
-        .time-filters button:hover {
-            background-color: #7a00b3;
+            box-sizing: border-box;
         }
 
         .emoji {
             position: absolute;
-            right: -25px;
+            right: 10px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 24px;
+            font-size: 20px;
             z-index: 2;
         }
+
     </style>
 </head>
 <body>
@@ -232,15 +199,13 @@
     }
 
     // Отображение данных
-    function displayData() {
+     function displayData() {
         const container = document.getElementById('students');
         container.innerHTML = '';
         
         const filteredStudents = studentsData
             .filter(student => {
-                // Фильтр по группе
                 const groupMatch = currentGroup === 'all' || student.group === currentGroup;
-                // Фильтр по поиску (регистронезависимый)
                 const nameMatch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
                 return groupMatch && nameMatch;
             })
@@ -254,23 +219,40 @@
             const barContainer = document.createElement('div');
             barContainer.className = 'bar-container';
 
+            // Контейнер для имени и баллов
+            const infoContainer = document.createElement('div');
+            infoContainer.className = 'student-info';
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'student-name';
+            nameSpan.textContent = student.name.toUpperCase();
+            
+            const pointsSpan = document.createElement('span');
+            pointsSpan.className = 'student-points';
+            pointsSpan.textContent = `${student.displayPoints} БАЛЛОВ`;
+            
+            infoContainer.appendChild(nameSpan);
+            infoContainer.appendChild(pointsSpan);
+            
+            // Обертка для шкалы
+            const barWrapper = document.createElement('div');
+            barWrapper.className = 'bar-wrapper';
+            
             const bar = document.createElement('div');
             bar.className = 'bar';
             const width = Math.min((student.displayPoints / 100) * 100, 100);
             bar.style.width = `${width}%`;
-            bar.textContent = `${student.displayPoints} БАЛЛОВ`;
-
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'student-name';
-            nameSpan.textContent = student.name.toUpperCase();
-
+            
             const emojiSpan = document.createElement('span');
             emojiSpan.className = 'emoji';
             emojiSpan.textContent = getEmoji(student.displayPoints);
-
-            barContainer.appendChild(nameSpan);
-            barContainer.appendChild(bar);
-            barContainer.appendChild(emojiSpan);
+            
+            barWrapper.appendChild(bar);
+            barWrapper.appendChild(emojiSpan);
+            
+            barContainer.appendChild(infoContainer);
+            barContainer.appendChild(barWrapper);
+            
             container.appendChild(barContainer);
         });
     }
