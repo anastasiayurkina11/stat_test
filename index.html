@@ -32,7 +32,7 @@
             margin-bottom: 20px;
         }
 
-    .cover-buttons {
+        .cover-buttons {
             display: flex;
             gap: 20px;
             margin-top: 20px;
@@ -150,7 +150,7 @@
         .points-scale {
             display: flex;
             justify-content: space-between;
-            margin: 20px 0;
+            margin: 20px 0 10px;
             color: #ffffff;
             font-size: 14px;
             position: relative;
@@ -210,9 +210,10 @@
 <body>
     <div class="cover">
         <h1>БАЛЛЫ УЧЕНИКОВ</h1>
-    <div class="cover-buttons">
+        <div class="cover-buttons">
             <button id="scrollButton" class="cover-button">УЗНАТЬ СВОЙ БАЛЛ</button>
             <a href="https://learn.algoritmika.org/login" target="_blank" class="cover-button">ПЕРЕЙТИ НА ПЛАТФОРМУ</a>
+        </div>
     </div>
 
     <div class="content">
@@ -232,10 +233,15 @@
 
         <div class="points-scale">
             <div class="scale-marker"><span>0</span></div>
+            <div class="scale-marker"><span>10</span></div>
             <div class="scale-marker"><span>20</span></div>
+            <div class="scale-marker"><span>30</span></div>
             <div class="scale-marker"><span>40</span></div>
+            <div class="scale-marker"><span>50</span></div>
             <div class="scale-marker"><span>60</span></div>
+            <div class="scale-marker"><span>70</span></div>
             <div class="scale-marker"><span>80</span></div>
+            <div class="scale-marker"><span>90</span></div>
             <div class="scale-marker"><span>100</span></div>
         </div>
 
@@ -253,11 +259,11 @@
     let searchQuery = '';
 
     function getEmoji(points) {
-        if (points >= 0 && points < 20) return '👍';
-        if (points >= 20 && points < 40) return '😊';
-        if (points >= 40 && points < 60) return '⭐';
-        if (points >= 60 && points < 80) return '🚀';
-        if (points >= 80 && points <= 100) return '🔥';
+        if (points >= 0 && points < 200) return '👍';
+        if (points >= 200 && points < 400) return '😊';
+        if (points >= 400 && points < 600) return '⭐';
+        if (points >= 600 && points < 800) return '🚀';
+        if (points >= 800 && points <= 1000) return '🔥';
         return '';
     }
 
