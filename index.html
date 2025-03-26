@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Баллы учеников</title>
- <style>
+    <style>
         body {
             font-family: 'Russo One', sans-serif;
             margin: 0;
@@ -64,7 +64,7 @@
             gap: 10px;
         }
 
-        .filters select, .filters button {
+        .filters select, .filters input {
             padding: 12px;
             font-size: 16px;
             border: 2px solid #9400d3;
@@ -75,8 +75,8 @@
             transition: all 0.3s ease;
         }
 
-        .filters button:hover {
-            background-color: #7a00b3;
+        #searchInput {
+            flex-grow: 1;
         }
 
         #students {
@@ -105,15 +105,16 @@
             transition: width 0.5s ease;
             box-shadow: 0 0 10px rgba(0,255,0,0.3);
             padding-right: 10px;
+            position: relative;
         }
 
         .student-name {
             position: absolute;
             left: 15px;
+            top: 15px;
             z-index: 2;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            padding: 0 10px;
-            line-height: 30px;
+            font-size: 14px;
         }
 
         .points-scale {
@@ -123,6 +124,22 @@
             color: #ffffff;
             font-size: 14px;
             padding: 0 10px;
+        }
+
+        .scale-marker {
+            position: relative;
+            text-align: center;
+            width: 0;
+        }
+
+        .scale-marker::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 2px;
+            height: 10px;
+            background-color: #ffffff;
         }
 
         .time-filters {
@@ -150,10 +167,18 @@
         .time-filters button:hover {
             background-color: #7a00b3;
         }
+
+        .emoji {
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            z-index: 2;
+        }
     </style>
 </head>
 <body>
-    <!-- Ваша HTML-разметка остается без изменений -->
     <div class="cover">
         <h1>БАЛЛЫ УЧЕНИКОВ</h1>
         <button id="scrollButton">УЗНАЙ СВОЙ БАЛЛ</button>
@@ -171,12 +196,16 @@
             <select id="groupFilter">
                 <option value="all">ВСЕ ГРУППЫ</option>
             </select>
-            <button id="sortButton">СОРТИРОВАТЬ ПО БАЛЛАМ</button>
+            <input type="text" id="searchInput" placeholder="Поиск по имени...">
         </div>
 
         <div class="points-scale">
-            <span>0</span>
-            <span>1000</span>
+            <div class="scale-marker" style="left: 0%;"><span>0</span></div>
+            <div class="scale-marker" style="left: 20%;"><span>20</span></div>
+            <div class="scale-marker" style="left: 40%;"><span>40</span></div>
+            <div class="scale-marker" style="left: 60%;"><span>60</span></div>
+            <div class="scale-marker" style="left: 80%;"><span>80</span></div>
+            <div class="scale-marker" style="left: 100%;"><span>100</span></div>
         </div>
 
         <div id="students"></div>
@@ -190,58 +219,16 @@
     let studentsData = [];
     let currentPeriod = 'all';
     let currentGroup = 'all';
+    let searchQuery = '';
 
-    // Функция для определения ISO недели
-    function getISOWeek(date) {
-        const d = new Date(date);
-        d.setHours(0, 0, 0, 0);
-        d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
-        const week1 = new Date(d.getFullYear(), 0, 4);
-        const weekNum = 1 + Math.round((d - week1) / 86400000 / 7);
-        return `${d.getFullYear()}W${weekNum.toString().padStart(2, '0')}`;
-    }
-
-    // Получение диапазона дат для периода
-    function getPeriodRange(period) {
-        const today = new Date();
-        const range = { start: new Date(0), end: new Date(8640000000000000) };
-        
-        if (period === 'day') {
-            range.start = new Date(today);
-            range.start.setHours(0, 0, 0, 0);
-            range.end = new Date(today);
-            range.end.setHours(23, 59, 59, 999);
-        } 
-        else if (period === 'week') {
-            const dayOfWeek = today.getDay();
-            const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-            range.start = new Date(today.setDate(diff));
-            range.start.setHours(0, 0, 0, 0);
-            range.end = new Date(range.start);
-            range.end.setDate(range.start.getDate() + 6);
-            range.end.setHours(23, 59, 59, 999);
-        }
-        else if (period === 'month') {
-            range.start = new Date(today.getFullYear(), today.getMonth(), 1);
-            range.end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            range.end.setHours(23, 59, 59, 999);
-        }
-        
-        return range;
-    }
-
-    // Расчет баллов за период
-    function calculatePeriodPoints(student, period) {
-        if (period === 'all') return student.total;
-        if (period === 'day') return student.day;
-        if (period === 'week') return student.week;
-        if (period === 'month') return student.month;
-        
-        const range = getPeriodRange(period);
-        return Object.entries(student.dates).reduce((sum, [dateStr, points]) => {
-            const date = new Date(dateStr);
-            return (date >= range.start && date <= range.end) ? sum + points : sum;
-        }, 0);
+    // Получаем эмодзи в зависимости от баллов
+    function getEmoji(points) {
+        if (points >= 0 && points < 200) return '👍'; // Лайк
+        if (points >= 200 && points < 400) return '😊'; // Улыбка
+        if (points >= 400 && points < 600) return '⭐'; // Звездочка
+        if (points >= 600 && points < 800) return '🚀'; // Ракета
+        if (points >= 800 && points <= 1000) return '🔥'; // Огонь
+        return '';
     }
 
     // Отображение данных
@@ -250,14 +237,18 @@
         container.innerHTML = '';
         
         const filteredStudents = studentsData
-            .filter(student => currentGroup === 'all' || student.group === currentGroup)
+            .filter(student => {
+                // Фильтр по группе
+                const groupMatch = currentGroup === 'all' || student.group === currentGroup;
+                // Фильтр по поиску (регистронезависимый)
+                const nameMatch = student.name.toLowerCase().includes(searchQuery.toLowerCase());
+                return groupMatch && nameMatch;
+            })
             .map(student => ({
                 ...student,
                 displayPoints: calculatePeriodPoints(student, currentPeriod)
             }))
             .sort((a, b) => b.displayPoints - a.displayPoints);
-
-        const maxPoints = Math.max(...filteredStudents.map(s => s.displayPoints), 1000);
 
         filteredStudents.forEach(student => {
             const barContainer = document.createElement('div');
@@ -265,7 +256,7 @@
 
             const bar = document.createElement('div');
             bar.className = 'bar';
-            const width = Math.min((student.displayPoints / maxPoints) * 100, 100);
+            const width = Math.min((student.displayPoints / 100) * 100, 100);
             bar.style.width = `${width}%`;
             bar.textContent = `${student.displayPoints} БАЛЛОВ`;
 
@@ -273,68 +264,52 @@
             nameSpan.className = 'student-name';
             nameSpan.textContent = student.name.toUpperCase();
 
+            const emojiSpan = document.createElement('span');
+            emojiSpan.className = 'emoji';
+            emojiSpan.textContent = getEmoji(student.displayPoints);
+
             barContainer.appendChild(nameSpan);
             barContainer.appendChild(bar);
+            barContainer.appendChild(emojiSpan);
             container.appendChild(barContainer);
         });
     }
 
-    // Загрузка данных
-    async function fetchData() {
-        try {
-            const response = await fetch(API_URL);
-            const rawData = await response.json();
-            
-            studentsData = rawData.map(student => {
-                // Рассчитываем баллы по периодам
-                const today = new Date();
-                let dayTotal = 0;
-                let weekTotal = 0;
-                let monthTotal = 0;
-                const dates = {};
-
-                Object.entries(student.dates).forEach(([dateStr, points]) => {
-                    const date = new Date(dateStr);
-                    dates[dateStr] = Number(points) || 0;
-                    
-                    // Проверяем периоды
-                    if (date.toDateString() === today.toDateString()) dayTotal += dates[dateStr];
-                    if (getISOWeek(date) === getISOWeek(today)) weekTotal += dates[dateStr];
-                    if (date.getFullYear() === today.getFullYear() && 
-                        date.getMonth() === today.getMonth()) monthTotal += dates[dateStr];
-                });
-                
-                return {
-                    ...student,
-                    total: Number(student.total) || 0,
-                    day: dayTotal,
-                    week: weekTotal,
-                    month: monthTotal,
-                    dates: dates
-                };
-            });
-            
-            populateGroupFilter();
-            displayData();
-        } catch (error) {
-            console.error('Ошибка загрузки данных:', error);
-            alert('Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже.');
-        }
-    }
-
-    function populateGroupFilter() {
-        const groupFilter = document.getElementById('groupFilter');
-        const groups = [...new Set(studentsData.map(student => student.group).filter(Boolean))];
+    // Расчет баллов за период
+    function calculatePeriodPoints(student, period) {
+        if (period === 'all') return student.total;
         
-        groups.forEach(group => {
-            const option = document.createElement('option');
-            option.value = group;
-            option.textContent = group;
-            groupFilter.appendChild(option);
-        });
+        const today = new Date();
+        let rangeStart, rangeEnd;
+        
+        if (period === 'day') {
+            rangeStart = new Date(today);
+            rangeStart.setHours(0, 0, 0, 0);
+            rangeEnd = new Date(today);
+            rangeEnd.setHours(23, 59, 59, 999);
+        } 
+        else if (period === 'week') {
+            const dayOfWeek = today.getDay();
+            const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+            rangeStart = new Date(today.setDate(diff));
+            rangeStart.setHours(0, 0, 0, 0);
+            rangeEnd = new Date(rangeStart);
+            rangeEnd.setDate(rangeStart.getDate() + 6);
+            rangeEnd.setHours(23, 59, 59, 999);
+        }
+        else if (period === 'month') {
+            rangeStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            rangeEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            rangeEnd.setHours(23, 59, 59, 999);
+        }
+        
+        return Object.entries(student.dates).reduce((sum, [dateStr, points]) => {
+            const date = new Date(dateStr);
+            return (date >= rangeStart && date <= rangeEnd) ? sum + points : sum;
+        }, 0);
     }
 
-    // Инициализация
+    // Обработчики событий
     document.getElementById('scrollButton').addEventListener('click', () => {
         document.querySelector('.content').scrollIntoView({ behavior: 'smooth' });
     });
@@ -354,7 +329,52 @@
         displayData();
     });
 
-    document.getElementById('sortButton').addEventListener('click', displayData);
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim();
+        displayData();
+    });
+
+    // Загрузка данных
+    async function fetchData() {
+        try {
+            const response = await fetch(API_URL);
+            const rawData = await response.json();
+            
+            studentsData = rawData.map(student => {
+                const dates = {};
+                for (const [dateStr, points] of Object.entries(student.dates)) {
+                    dates[dateStr] = Number(points) || 0;
+                }
+                
+                return {
+                    name: student.name,
+                    group: student.group,
+                    total: Number(student.total) || 0,
+                    dates: dates
+                };
+            });
+            
+            populateGroupFilter();
+            displayData();
+        } catch (error) {
+            console.error('Ошибка загрузки данных:', error);
+            alert('Произошла ошибка при загрузке данных. Пожалуйста, попробуйте позже.');
+        }
+    }
+
+    function populateGroupFilter() {
+        const groupFilter = document.getElementById('groupFilter');
+        const groups = [...new Set(studentsData.map(student => student.group))];
+        
+        groups.forEach(group => {
+            if (group) {
+                const option = document.createElement('option');
+                option.value = group;
+                option.textContent = group;
+                groupFilter.appendChild(option);
+            }
+        });
+    }
 
     // Запуск приложения
     fetchData();
