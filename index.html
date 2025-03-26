@@ -52,16 +52,16 @@
         .content {
             background-color: #1a1a1a;
             padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
         }
 
         .filters {
             display: flex;
             justify-content: space-between;
-            margin: 20px;
-            padding: 10px;
-            background-color: #333333;
-            border-radius: 10px;
+            margin: 20px 0;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .filters select, .filters input {
@@ -71,8 +71,7 @@
             background-color: #1a1a1a;
             color: #ffffff;
             border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            min-width: 200px;
         }
 
         #searchInput {
@@ -80,35 +79,30 @@
         }
 
         #students {
-            margin: 20px;
+            margin: 20px 0;
         }
 
         .bar-container {
             width: 100%;
-            background-color: #333333;
-            border-radius: 8px;
-            margin-bottom: 15px; /* Увеличим отступ между строками */
-            overflow: hidden;
-            position: relative;
-            padding: 5px;
-            box-sizing: border-box;
+            margin-bottom: 15px;
         }
 
         .student-info {
             display: flex;
             justify-content: space-between;
             margin-bottom: 5px;
+            align-items: center;
         }
 
         .student-name {
-            font-size: 14px;
+            font-size: 16px;
             color: #ffffff;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            font-weight: bold;
         }
 
         .student-points {
             font-size: 14px;
-            color: #ffffff;
+            color: #cccccc;
         }
 
         .bar-wrapper {
@@ -132,6 +126,7 @@
             box-shadow: 0 0 10px rgba(0,255,0,0.3);
             padding-right: 10px;
             box-sizing: border-box;
+            position: relative;
         }
 
         .emoji {
@@ -143,6 +138,64 @@
             z-index: 2;
         }
 
+        .points-scale {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            color: #ffffff;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .scale-marker {
+            position: relative;
+            text-align: center;
+            flex: 1;
+        }
+
+        .scale-marker::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 1px;
+            height: 5px;
+            background-color: #ffffff;
+        }
+
+        .scale-marker:first-child::after,
+        .scale-marker:last-child::after {
+            width: 2px;
+            height: 10px;
+        }
+
+        .time-filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .time-filters button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #9400d3;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .time-filters button.active {
+            background-color: #7a00b3;
+            box-shadow: 0 0 10px rgba(148, 0, 211, 0.5);
+        }
+
+        .time-filters button:hover {
+            background-color: #7a00b3;
+        }
     </style>
 </head>
 <body>
@@ -167,12 +220,12 @@
         </div>
 
         <div class="points-scale">
-            <div class="scale-marker" style="left: 0%;"><span>0</span></div>
-            <div class="scale-marker" style="left: 20%;"><span>20</span></div>
-            <div class="scale-marker" style="left: 40%;"><span>40</span></div>
-            <div class="scale-marker" style="left: 60%;"><span>60</span></div>
-            <div class="scale-marker" style="left: 80%;"><span>80</span></div>
-            <div class="scale-marker" style="left: 100%;"><span>100</span></div>
+            <div class="scale-marker"><span>0</span></div>
+            <div class="scale-marker"><span>20</span></div>
+            <div class="scale-marker"><span>40</span></div>
+            <div class="scale-marker"><span>60</span></div>
+            <div class="scale-marker"><span>80</span></div>
+            <div class="scale-marker"><span>100</span></div>
         </div>
 
         <div id="students"></div>
@@ -188,18 +241,16 @@
     let currentGroup = 'all';
     let searchQuery = '';
 
-    // Получаем эмодзи в зависимости от баллов
     function getEmoji(points) {
-        if (points >= 0 && points < 200) return '👍'; // Лайк
-        if (points >= 200 && points < 400) return '😊'; // Улыбка
-        if (points >= 400 && points < 600) return '⭐'; // Звездочка
-        if (points >= 600 && points < 800) return '🚀'; // Ракета
-        if (points >= 800 && points <= 1000) return '🔥'; // Огонь
+        if (points >= 0 && points < 20) return '👍';
+        if (points >= 200 && points < 40) return '😊';
+        if (points >= 400 && points < 60) return '⭐';
+        if (points >= 600 && points < 80) return '🚀';
+        if (points >= 800 && points <= 100) return '🔥';
         return '';
     }
 
-    // Отображение данных
-     function displayData() {
+    function displayData() {
         const container = document.getElementById('students');
         container.innerHTML = '';
         
@@ -219,7 +270,6 @@
             const barContainer = document.createElement('div');
             barContainer.className = 'bar-container';
 
-            // Контейнер для имени и баллов
             const infoContainer = document.createElement('div');
             infoContainer.className = 'student-info';
             
@@ -234,7 +284,6 @@
             infoContainer.appendChild(nameSpan);
             infoContainer.appendChild(pointsSpan);
             
-            // Обертка для шкалы
             const barWrapper = document.createElement('div');
             barWrapper.className = 'bar-wrapper';
             
@@ -257,7 +306,6 @@
         });
     }
 
-    // Расчет баллов за период
     function calculatePeriodPoints(student, period) {
         if (period === 'all') return student.total;
         
@@ -291,7 +339,6 @@
         }, 0);
     }
 
-    // Обработчики событий
     document.getElementById('scrollButton').addEventListener('click', () => {
         document.querySelector('.content').scrollIntoView({ behavior: 'smooth' });
     });
@@ -316,7 +363,6 @@
         displayData();
     });
 
-    // Загрузка данных
     async function fetchData() {
         try {
             const response = await fetch(API_URL);
@@ -358,7 +404,6 @@
         });
     }
 
-    // Запуск приложения
     fetchData();
 </script>
 </body>
