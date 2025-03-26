@@ -32,7 +32,13 @@
             margin-bottom: 20px;
         }
 
-        .cover button {
+    .cover-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .cover-button {
             padding: 15px 30px;
             font-size: 18px;
             color: #ffffff;
@@ -42,9 +48,12 @@
             cursor: pointer;
             transition: all 0.3s ease;
             text-transform: uppercase;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
         }
 
-        .cover button:hover {
+        .cover-button:hover {
             background-color: #7a00b3;
             transform: scale(1.05);
         }
@@ -201,7 +210,9 @@
 <body>
     <div class="cover">
         <h1>БАЛЛЫ УЧЕНИКОВ</h1>
-        <button id="scrollButton">УЗНАЙ СВОЙ БАЛЛ</button>
+    <div class="cover-buttons">
+            <button id="scrollButton" class="cover-button">УЗНАТЬ СВОЙ БАЛЛ</button>
+            <a href="https://learn.algoritmika.org/login" target="_blank" class="cover-button">ПЕРЕЙТИ НА ПЛАТФОРМУ</a>
     </div>
 
     <div class="content">
